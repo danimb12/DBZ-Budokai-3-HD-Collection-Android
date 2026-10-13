@@ -22,7 +22,13 @@ mkdir -p $W/lib/arm64-v8a $W/gen $W/classes $W/dex $W/java
 # 1) native libraries: libmain.so + every shared lib it (transitively) needs
 #    that the build produced, the GPU plugin, libc++_shared and the probe.
 # The SDK writes its shared libs to <sdk>/out/<platform>/, the game to the build dir.
-find_lib() { find "$BUILD" "$SDKSRC/out" -name "$1" -type f -newer "$SDKSRC/CMakeLists.txt" 2>/dev/null | head -1; }
+# Only AArch64 ELF files qualify: <sdk>/out/ may also hold the host (x86-64) build.
+find_lib() {
+  local f
+  for f in $(find "$BUILD" "$SDKSRC/out" -name "$1" -type f 2>/dev/null); do
+    if $TC/bin/llvm-readelf -h "$f" 2>/dev/null | grep -q "AArch64"; then echo "$f"; return; fi
+  done
+}
 copy_with_deps() {
   local f=$1 base; base=$(basename "$f")
   [ -f "$W/lib/arm64-v8a/$base" ] && return
@@ -38,6 +44,9 @@ cp $TC/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so $W/lib/arm64-v8a/
 $TC/bin/aarch64-linux-android29-clang++ -O2 -std=c++17 -shared -fPIC -Wl,-z,max-page-size=16384 \
   -static-libstdc++ "$HERE/app/probe.cpp" -o $W/lib/arm64-v8a/libdbz3probe.so -landroid -lvulkan -llog
 $TC/bin/llvm-strip --strip-unneeded $W/lib/arm64-v8a/*.so
+for so in $W/lib/arm64-v8a/*.so; do
+  $TC/bin/llvm-readelf -h "$so" | grep -q "AArch64" || { echo "ERROR: $so no es AArch64" >&2; exit 1; }
+done
 ls -la $W/lib/arm64-v8a
 
 # 2) resources + manifest
