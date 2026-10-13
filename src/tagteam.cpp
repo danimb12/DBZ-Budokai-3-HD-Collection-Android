@@ -30,7 +30,7 @@
 #include <mutex>
 #include <vector>
 
-#include "generated/dbz3_init.h"
+#include "src/generated_init.h"
 #include "guest_region.h"
 #include "roster_ext.h"
 #include "tagteam.h"

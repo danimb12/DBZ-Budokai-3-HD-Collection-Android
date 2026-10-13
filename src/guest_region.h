@@ -17,7 +17,11 @@
 #include <rex/hook.h>
 
 namespace dbz3 {
+#if defined(DBZ3_EU_VARIANT) && !defined(DBZ3_DUAL_REGION)
+inline bool g_guest_eu = true;
+#else
 inline bool g_guest_eu = false;
+#endif
 inline uint32_t GuestAddr(uint32_t us, uint32_t eu) { return g_guest_eu ? eu : us; }
 }  // namespace dbz3
 
@@ -30,6 +34,12 @@ using Dbz3GuestFn = void (*)(PPCContext&, uint8_t*);
   REX_HOOK_RAW(eu) { impl(ctx, base, __imp__##eu); }
 // call a guest function (or its hook) of the active image
 #define DBZ3_CALL2(us, eu) (::dbz3::g_guest_eu ? eu : us)
+#define DBZ3_EXTERN_EU(eu) REX_EXTERN(eu)
+#elif defined(DBZ3_EU_VARIANT)
+// EU-only core (Android): generated_eu is prefixed with
+// `tools/prefix_eu_codegen.py --keep-image-config`, so only the EU symbols exist.
+#define DBZ3_HOOK2(us, eu, impl) REX_HOOK_RAW(eu) { impl(ctx, base, __imp__##eu); }
+#define DBZ3_CALL2(us, eu) eu
 #define DBZ3_EXTERN_EU(eu) REX_EXTERN(eu)
 #else
 #define DBZ3_HOOK2(us, eu, impl) REX_HOOK_RAW(us) { impl(ctx, base, __imp__##us); }

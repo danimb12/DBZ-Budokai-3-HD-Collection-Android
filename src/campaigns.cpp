@@ -33,7 +33,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "generated/dbz3_init.h"
+#include "src/generated_init.h"
 #include "guest_region.h"
 #include "mods.h"
 

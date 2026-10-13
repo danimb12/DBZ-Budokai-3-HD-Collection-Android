@@ -1,6 +1,11 @@
 import re, glob, os, sys
 
-DIR = sys.argv[1] if len(sys.argv) > 1 else r"C:\Users\javie\Desktop\PROYECTOS IA\DBZ Budokai 3 HD Collection\generated_eu"
+# --keep-image-config: EU-only builds (Android) keep PPCImageConfig /
+# PPCFuncMappings unprefixed (main.cpp's single-region path expects them) but
+# still prefix the guest functions so DBZ3_HOOK can target the EU symbols.
+KEEP_IMAGE_CONFIG = "--keep-image-config" in sys.argv
+_args = [a for a in sys.argv[1:] if not a.startswith("--")]
+DIR = _args[0] if _args else r"C:\Users\javie\Desktop\PROYECTOS IA\DBZ Budokai 3 HD Collection\generated_eu"
 PREFIX = "dbz3eu"
 
 RULES = [
@@ -15,9 +20,12 @@ RULES = [
     (re.compile(r'__savevmx_'), f"{PREFIX}_savevmx_"),
     (re.compile(r'__restvmx_'), f"{PREFIX}_restvmx_"),
     (re.compile(r'\bxstart\b'), f"{PREFIX}_xstart"),
-    (re.compile(r'\bPPCImageConfig\b'), "PPCImageConfigEU"),
-    (re.compile(r'\bPPCFuncMappings\b'), "PPCFuncMappingsEU"),
 ]
+if not KEEP_IMAGE_CONFIG:
+    RULES += [
+        (re.compile(r'\bPPCImageConfig\b'), "PPCImageConfigEU"),
+        (re.compile(r'\bPPCFuncMappings\b'), "PPCFuncMappingsEU"),
+    ]
 
 files_changed = 0
 for path in glob.glob(os.path.join(DIR, "*.cpp")) + glob.glob(os.path.join(DIR, "*.h")):

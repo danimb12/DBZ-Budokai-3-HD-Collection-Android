@@ -20,7 +20,7 @@
 #include <rex/hook.h>
 #include <rex/logging.h>
 
-#include "generated/dbz3_init.h"
+#include "src/generated_init.h"
 #include "guest_region.h"
 
 #include <algorithm>

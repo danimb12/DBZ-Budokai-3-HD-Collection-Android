@@ -62,6 +62,13 @@ patches/*
 !patches/rexglue-sdk/**/*.h
 !patches/rexglue-sdk/**/*.cpp
 !patches/README.md
+# Android overlay (applied on top of patches/rexglue-sdk by android/setup_sdk.sh)
+!patches/rexglue-sdk-android/
+!patches/rexglue-sdk-android/**/
+!patches/rexglue-sdk-android/**/*.h
+!patches/rexglue-sdk-android/**/*.cpp
+!patches/rexglue-sdk-android/**/CMakeLists.txt
+!patches/rexglue-sdk-android/README.md
 
 # Extracted/analysis outputs.
 afs_out/

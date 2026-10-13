@@ -8,7 +8,7 @@
 //   (siempre "conectado"). Evidencias: docs/08_online/ONLINE.md.
 #include <rex/hook.h>
 
-#include "generated/dbz3_init.h"
+#include "src/generated_init.h"
 #include "../guest_region.h"
 #include "netplay.h"
 #include "../tagteam.h"

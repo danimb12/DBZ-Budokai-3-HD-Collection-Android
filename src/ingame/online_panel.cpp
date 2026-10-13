@@ -17,7 +17,7 @@
 #include <rex/runtime.h>
 
 #include "../guest_region.h"
-#include "generated/dbz3_init.h"
+#include "src/generated_init.h"
 #include "../launcher/i18n.h"
 #include "../launcher/launcher_state.h"
 #include "../launcher/settings.h"

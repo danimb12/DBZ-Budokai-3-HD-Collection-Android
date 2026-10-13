@@ -7,8 +7,11 @@ project(dbz3 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find ReXGlue SDK (pre-built distribution)
-find_package(rexglue REQUIRED CONFIG)
+# Find ReXGlue SDK (pre-built distribution). The Android superbuild
+# (android/CMakeLists.txt) adds the SDK in-tree instead, so skip it then.
+if(NOT TARGET rex::runtime)
+    find_package(rexglue REQUIRED CONFIG)
+endif()
 
 # User source files
 set(DBZ3_SOURCES
@@ -76,9 +79,16 @@ if(DBZ3_GENERATED_DIR STREQUAL "generated_eu" AND NOT DBZ3_DUAL_REGION)
     list(REMOVE_ITEM DBZ3_SOURCES src/roster_trace.cpp)
     list(REMOVE_ITEM DBZ3_SOURCES src/roster_ext.cpp src/select_ext.cpp)
     list(REMOVE_ITEM DBZ3_SOURCES src/net/netplay_hooks.cpp src/tagteam.cpp src/tagteam_slots.cpp src/campaigns.cpp)
+    # The in-game panels still call into those US-only features: link no-op
+    # stand-ins (Tag Team, new characters and campaigns are US-only anyway).
+    list(APPEND DBZ3_SOURCES src/eu_only_stubs.cpp)
 endif()
 
-if(WIN32)
+if(ANDROID)
+    # Android: SDLActivity loads libmain.so and calls SDL_main.
+    add_library(dbz3 SHARED ${DBZ3_SOURCES})
+    set_target_properties(dbz3 PROPERTIES OUTPUT_NAME main)
+elseif(WIN32)
     add_executable(dbz3 WIN32 ${DBZ3_SOURCES} src/version.rc)
     # UCRT marks getenv/fopen as "deprecated" even though they are the portable
     # choice here (the game also builds on Linux where they are not). Silence
