@@ -14,6 +14,8 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.content.SharedPreferences;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -63,7 +65,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(18, 18, 22));
 
         TextView title = new TextView(this);
-        title.setText("DBZ Budokai 3 · Android  v0.3.3");
+        title.setText("DBZ Budokai 3 · Android  v0.4");
         title.setTextSize(22);
         title.setTextColor(Color.rgb(255, 140, 26));
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -89,6 +91,23 @@ public class MainActivity extends Activity {
         root.addView(row2);
         root.addView(row3);
         row3.addView(button("Compartir último log del juego", v -> shareLastLog()), weight());
+
+        // Performance levers, passed to GameActivity as cvars (A/B tests without new builds).
+        TextView opts = new TextView(this);
+        opts.setText("Opciones (se aplican al arrancar):");
+        opts.setTextColor(Color.LTGRAY);
+        root.addView(opts);
+        LinearLayout o1 = new LinearLayout(this);
+        LinearLayout o2 = new LinearLayout(this);
+        LinearLayout o3 = new LinearLayout(this);
+        root.addView(o1);
+        root.addView(o2);
+        root.addView(o3);
+        o1.addView(option(GameActivity.OPT_TOUCH, "Controles táctiles", true), weight());
+        o1.addView(option(GameActivity.OPT_VSYNC, "VSync", true), weight());
+        o2.addView(option(GameActivity.OPT_OCCLUSION, "Occlusion queries", false), weight());
+        o2.addView(option(GameActivity.OPT_ASYNC, "Shaders asíncronos", true), weight());
+        o3.addView(option(GameActivity.OPT_MSAA, "MSAA 2x", false), weight());
         row1.addView(button("1. Analizar móvil", v -> probe()), weight());
         row1.addView(button("2. Permiso archivos", v -> askFiles()), weight());
         row2.addView(button("3. Verificar juego", v -> verify()), weight());
@@ -130,6 +149,12 @@ public class MainActivity extends Activity {
         log("Arrancando el juego… Si se cierra, vuelve aquí y pulsa 'Compartir último log del juego'.");
         Intent i = new Intent(this, GameActivity.class);
         i.putExtra(GameActivity.EXTRA_ROOT, base);
+        SharedPreferences p = prefs();
+        i.putExtra(GameActivity.OPT_TOUCH, p.getBoolean(GameActivity.OPT_TOUCH, true));
+        i.putExtra(GameActivity.OPT_VSYNC, p.getBoolean(GameActivity.OPT_VSYNC, true));
+        i.putExtra(GameActivity.OPT_OCCLUSION, p.getBoolean(GameActivity.OPT_OCCLUSION, false));
+        i.putExtra(GameActivity.OPT_ASYNC, p.getBoolean(GameActivity.OPT_ASYNC, true));
+        i.putExtra(GameActivity.OPT_MSAA, p.getBoolean(GameActivity.OPT_MSAA, false));
         startActivity(i);
     }
 
@@ -172,6 +197,17 @@ public class MainActivity extends Activity {
         i.putExtra(Intent.EXTRA_SUBJECT, "DBZ3 Android log " + f.getName());
         i.putExtra(Intent.EXTRA_TEXT, "== " + f.getName() + " ==\n" + sb);
         startActivity(Intent.createChooser(i, "Compartir log"));
+    }
+
+    SharedPreferences prefs() { return getSharedPreferences("dbz3", MODE_PRIVATE); }
+
+    CheckBox option(String key, String label, boolean def) {
+        CheckBox c = new CheckBox(this);
+        c.setText(label);
+        c.setTextColor(Color.WHITE);
+        c.setChecked(prefs().getBoolean(key, def));
+        c.setOnCheckedChangeListener((b, on) -> prefs().edit().putBoolean(key, on).apply());
+        return c;
     }
 
     LinearLayout.LayoutParams weight() { return new LinearLayout.LayoutParams(0, -2, 1f); }

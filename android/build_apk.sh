@@ -30,7 +30,9 @@ find_lib() {
   done
 }
 copy_with_deps() {
-  local f=$1 base; base=$(basename "$f")
+  local f=$1 base
+  if [ -z "$f" ]; then echo "ERROR: falta una librería AArch64 requerida en $BUILD o $SDKSRC/out" >&2; exit 1; fi
+  base=$(basename "$f")
   [ -f "$W/lib/arm64-v8a/$base" ] && return
   cp "$f" "$W/lib/arm64-v8a/"
   for dep in $($TC/bin/llvm-readelf -d "$f" | sed -n 's/.*NEEDED.*\[\(.*\)\]/\1/p'); do

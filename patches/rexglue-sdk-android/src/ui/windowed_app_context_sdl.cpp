@@ -130,19 +130,6 @@ void SDLWindowedAppContext::ProcessEvent(SDL_Event& event) {
     return;
   }
   switch (event.type) {
-#if REX_PLATFORM_ANDROID
-    case SDL_EVENT_DID_ENTER_BACKGROUND:
-    case SDL_EVENT_DID_ENTER_FOREGROUND: {
-      const bool foreground = event.type == SDL_EVENT_DID_ENTER_FOREGROUND;
-      REXLOG_INFO("Android: app {} - {} the presentation surface",
-                  foreground ? "in the foreground" : "in the background",
-                  foreground ? "re-creating" : "releasing");
-      for (const auto& [id, window] : windows_) {
-        window->HandleAppLifecycle(foreground);
-      }
-      break;
-    }
-#endif
     case SDL_EVENT_QUIT:
       if (synchronously_handled_quit_events_ != 0) {
         --synchronously_handled_quit_events_;
@@ -195,6 +182,29 @@ void SDLWindowedAppContext::ProcessEvent(SDL_Event& event) {
 
 bool SDLCALL SDLWindowedAppContext::WatchEvent(void* userdata, SDL_Event* event) {
   auto* context = static_cast<SDLWindowedAppContext*>(userdata);
+#if REX_PLATFORM_ANDROID
+  // SDL3 does not queue app lifecycle events: they only reach event watchers,
+  // synchronously, from SDL_PumpEvents on the SDL main (= UI) thread. Android
+  // destroys the ANativeWindow in the background and creates a new one on
+  // return, so the presenter's Vulkan surface must be dropped and re-created.
+  if (event->type == SDL_EVENT_DID_ENTER_BACKGROUND ||
+      event->type == SDL_EVENT_DID_ENTER_FOREGROUND) {
+    const bool foreground = event->type == SDL_EVENT_DID_ENTER_FOREGROUND;
+    auto apply = [context, foreground]() {
+      REXLOG_INFO("Android: app {} - {} the presentation surface",
+                  foreground ? "in the foreground" : "in the background",
+                  foreground ? "re-creating" : "releasing");
+      for (const auto& [id, window] : context->windows_) {
+        window->HandleAppLifecycle(foreground);
+      }
+    };
+    if (context->IsInUIThread()) {
+      apply();
+    } else {
+      context->CallInUIThread(apply);
+    }
+  }
+#endif
   if (event->type == SDL_EVENT_QUIT && SDL_IsMainThread() && context->IsInUIThread()) {
     // Cocoa stops making Metal drawables available as part of its termination
     // request. Handle the request synchronously while SDL is queueing it,

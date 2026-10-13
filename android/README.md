@@ -32,7 +32,8 @@ cmake -G Ninja -S android -B build-android \
   -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-29 -DANDROID_STL=c++_shared \
   -DCMAKE_BUILD_TYPE=Release -DREXGLUE_SDK_DIR=$(realpath ../rexglue-sdk) \
   -DDBZ3_GENERATED_DIR=generated_eu \
-  -DCMAKE_C_FLAGS=-march=armv8.2-a -DCMAKE_CXX_FLAGS=-march=armv8.2-a
+  -DCMAKE_C_FLAGS="-march=armv8.2-a -fno-stack-protector -U_FORTIFY_SOURCE" \
+  -DCMAKE_CXX_FLAGS="-march=armv8.2-a -fno-stack-protector -U_FORTIFY_SOURCE"
 ninja -C build-android dbz3 rexgpu-xenos
 
 # 4) Empaquetar

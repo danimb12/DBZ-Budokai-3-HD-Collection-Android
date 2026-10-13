@@ -12,6 +12,13 @@ import org.libsdl.app.SDLActivity;
  */
 public class GameActivity extends SDLActivity {
     public static final String EXTRA_ROOT = "root";
+    public static final String OPT_TOUCH = "opt_touch";
+    public static final String OPT_VSYNC = "opt_vsync";
+    public static final String OPT_OCCLUSION = "opt_occlusion";
+    public static final String OPT_ASYNC = "opt_async";
+    public static final String OPT_MSAA = "opt_msaa";
+
+    boolean opt(String key, boolean def) { return getIntent().getBooleanExtra(key, def); }
 
     @Override protected void onCreate(Bundle b) {
         String root = getIntent().getStringExtra(EXTRA_ROOT);
@@ -23,7 +30,7 @@ public class GameActivity extends SDLActivity {
         }
         super.onCreate(b);
         // On-screen gamepad over the SDL surface (toggle with the ◐ button).
-        if (mLayout != null) {
+        if (mLayout != null && opt(OPT_TOUCH, true)) {
             mLayout.addView(new TouchControls(this), new android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT));
@@ -36,6 +43,15 @@ public class GameActivity extends SDLActivity {
     }
 
     @Override protected String[] getArguments() {
+        java.util.List<String> a = new java.util.ArrayList<>(java.util.Arrays.asList(baseArguments()));
+        a.add("--dbz3_vsync=" + opt(OPT_VSYNC, true));
+        a.add("--dbz3_occlusion_queries=" + opt(OPT_OCCLUSION, false));
+        a.add("--dbz3_async_shaders=" + opt(OPT_ASYNC, true));
+        a.add("--dbz3_native_2x_msaa=" + opt(OPT_MSAA, false));
+        return a.toArray(new String[0]);
+    }
+
+    String[] baseArguments() {
         return new String[] {
             "--gpu_backend=vulkan",
             "--dbz3_gpu_backend=vulkan",
@@ -48,9 +64,6 @@ public class GameActivity extends SDLActivity {
             // No FidelityFX on Android: plain bilinear output, manual preset.
             "--dbz3_present_effect=bilinear",
             "--dbz3_quality_preset=manual",
-            // 2x MSAA is costly on a tiler GPU with EDRAM emulation: off by default
-            // (can be re-enabled from the in-game quick menu, SELECT+START).
-            "--dbz3_native_2x_msaa=false",
             // Touches must not turn into mouse-look.
             "--dbz3_mnk_mouse=false",
             "--dbz3_mnk_mode=true",
