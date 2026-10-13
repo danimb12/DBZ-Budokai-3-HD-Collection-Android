@@ -52,9 +52,9 @@ javac -source 17 -target 17 -nowarn -Xlint:none -classpath $JAR -d $W/classes \
   $(find $W/java $W/gen -name '*.java') 2>&1 | grep -v "^Picked up\|^Note:" || true
 $BT/d8 --release --min-api 29 --lib $JAR --output $W/dex $(find $W/classes -name '*.class')
 
-# 4) assemble, align (16 KB for .so), sign
+# 4) assemble (libs deflated: extractNativeLibs=true keeps the APK small), align, sign
 cp $W/base.apk $W/unsigned.apk
-(cd $W && zip -q -j unsigned.apk dex/classes.dex && zip -q -0 -r unsigned.apk lib)
+(cd $W && zip -q -j unsigned.apk dex/classes.dex && zip -q -9 -r unsigned.apk lib)
 $BT/zipalign -f -P 16 4 $W/unsigned.apk $W/aligned.apk
 if [ ! -f "$KEYSTORE" ]; then
   keytool -genkeypair -keystore "$KEYSTORE" -storepass android -keypass android -alias dbz3 \

@@ -16,7 +16,7 @@
     <uses-feature android:name="android.hardware.usb.host" android:required="false"/>
     <application android:label="DBZ3 Android" android:icon="@drawable/icon"
         android:theme="@android:style/Theme.DeviceDefault"
-        android:extractNativeLibs="false"
+        android:extractNativeLibs="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true">
         <activity android:name=".MainActivity" android:exported="true"
