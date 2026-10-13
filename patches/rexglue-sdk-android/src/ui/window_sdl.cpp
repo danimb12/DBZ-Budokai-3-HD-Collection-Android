@@ -445,6 +445,13 @@ void WindowSDL::RequestPaintImpl() {
   SDL_PushEvent(&event);
 }
 
+void WindowSDL::HandleAppLifecycle(bool foreground) {
+  OnSurfaceChanged(foreground);
+  if (foreground) {
+    OnPaint(true);
+  }
+}
+
 void WindowSDL::HandlePaintEvent() {
   paint_pending_.store(false, std::memory_order_release);
   OnPaint();

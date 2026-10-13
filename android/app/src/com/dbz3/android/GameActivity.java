@@ -43,6 +43,8 @@ public class GameActivity extends SDLActivity {
             "--dbz3_region=eu",
             "--log_level=info",
             "--log_flush_interval=1",
+            // fps + per-thread CPU load every 5 s (diagnosis while the port matures)
+            "--dbz3_perf_logging=true",
             // No FidelityFX on Android: plain bilinear output, manual preset.
             "--dbz3_present_effect=bilinear",
             "--dbz3_quality_preset=manual",

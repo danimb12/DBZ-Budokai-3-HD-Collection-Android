@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(18, 18, 22));
 
         TextView title = new TextView(this);
-        title.setText("DBZ Budokai 3 · Android  v0.3.2");
+        title.setText("DBZ Budokai 3 · Android  v0.3.3");
         title.setTextSize(22);
         title.setTextColor(Color.rgb(255, 140, 26));
         title.setTypeface(Typeface.DEFAULT_BOLD);
