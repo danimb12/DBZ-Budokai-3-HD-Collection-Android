@@ -46,6 +46,9 @@ public class GameActivity extends SDLActivity {
             // No FidelityFX on Android: plain bilinear output, manual preset.
             "--dbz3_present_effect=bilinear",
             "--dbz3_quality_preset=manual",
+            // 2x MSAA is costly on a tiler GPU with EDRAM emulation: off by default
+            // (can be re-enabled from the in-game quick menu, SELECT+START).
+            "--dbz3_native_2x_msaa=false",
             // Touches must not turn into mouse-look.
             "--dbz3_mnk_mouse=false",
             "--dbz3_mnk_mode=true",
