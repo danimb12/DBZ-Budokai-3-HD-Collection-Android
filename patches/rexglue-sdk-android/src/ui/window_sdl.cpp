@@ -446,6 +446,7 @@ void WindowSDL::RequestPaintImpl() {
 }
 
 void WindowSDL::HandleAppLifecycle(bool foreground) {
+  rex::cvar::SetFlagByName("dbz3_host_in_background", foreground ? "false" : "true");
   OnSurfaceChanged(foreground);
   if (foreground) {
     OnPaint(true);

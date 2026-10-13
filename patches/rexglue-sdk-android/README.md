@@ -18,3 +18,5 @@ sobre un checkout limpio del tag `v0.10.0`. Son copias completas de archivo
 | `include/rex/ui/window_sdl.h`, `src/ui/window_sdl.cpp`, `src/ui/windowed_app_context_sdl.cpp` | Al volver de segundo plano Android crea un `ANativeWindow` nuevo: se suelta y se recrea la superficie Vulkan (antes, pantalla negra) |
 | `src/graphics/vulkan/pipeline_cache.cpp` | Bionic abre `"a+"` al final del fichero: rebobinar antes de leer la caché de shaders (si no, se truncaba en cada arranque) |
 | `src/ui/presenter.cpp`, `src/graphics/vulkan/command_processor.cpp` | `dbz3_perf_logging` fuera de Windows + carga de CPU por hilo en Android (`perf cpu`) |
+| `src/audio/sdl/sdl_audio_driver.cpp` | Android: salida estéreo con el downmix del runtime (AAudio perdía los canales surround/LFE: sin SFX de golpes) |
+| `src/graphics/graphics_system.cpp` | Sin vblanks mientras la app está en segundo plano (`dbz3_host_in_background`): pausa efectiva |

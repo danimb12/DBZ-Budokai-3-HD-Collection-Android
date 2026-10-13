@@ -30,6 +30,13 @@ REXCVAR_DEFINE_BOOL(dbz3_perf_logging, false, "UI/Presenter",
                     "Log guest fps every 5 s (and, on Android, per-thread CPU load)");
 #endif
 
+// Android: set while the app is in the background. The guest vblank timer
+// (graphics_system.cpp, read by name from the GPU plugin) stops ticking, so the
+// guest blocks on its next vsync wait: an effective pause that keeps the phone
+// from running the game at full load (and heating) off-screen.
+REXCVAR_DEFINE_BOOL(dbz3_host_in_background, false, "DBZ3/Dev",
+                    "Set by the host while the app is in the background (pauses vblank)");
+
 REXCVAR_DEFINE_BOOL(host_present_from_non_ui_thread, true, "UI/Presenter",
                     "Allow presentation from non-UI thread");
 

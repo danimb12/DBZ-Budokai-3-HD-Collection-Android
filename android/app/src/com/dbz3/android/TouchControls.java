@@ -98,8 +98,9 @@ public class TouchControls extends View {
         float sw = u * 1.5f, sh = u * 0.55f;
         select.r.set(w / 2f - sw - u * 0.2f, h - m - sh, w / 2f - u * 0.2f, h - m);
         start.r.set(w / 2f + u * 0.2f, h - m - sh, w / 2f + sw + u * 0.2f, h - m);
-        // Show/hide toggle, top centre.
-        circle(toggle, w / 2f, m + u * 0.35f, u * 0.32f);
+        // Show/hide toggle: top centre but clear of the status-bar swipe zone
+        // (touches on the top ~40 px are taken by the system gesture).
+        circle(toggle, w / 2f, m + u * 0.9f, u * 0.42f);
         text.setTextSize(u * 0.38f);
     }
 
@@ -131,7 +132,8 @@ public class TouchControls extends View {
         for (Btn b : all) {
             if (!visible && b != toggle) continue;
             RectF g = new RectF(b.r);
-            g.inset(-b.r.width() * 0.08f, -b.r.height() * 0.08f);   // slightly forgiving hit boxes
+            float grow = b == toggle ? 0.35f : 0.08f;                // forgiving hit boxes
+            g.inset(-b.r.width() * grow, -b.r.height() * grow);
             if (g.contains(x, y)) return b;
         }
         return null;
