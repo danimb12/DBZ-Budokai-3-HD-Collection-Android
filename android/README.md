@@ -24,6 +24,7 @@ ninja -C ../rexglue-host rexglue
 cp /ruta/a/tu/yae3_xenon.xex yae3_xenon_eu.xex          # SHA-256 EU en baserom.md
 ../rexglue-sdk/out/linux-amd64/rexglue -f codegen dbz3_manifest_eu.toml
 python3 tools/prefix_eu_codegen.py generated_eu --keep-image-config
+python3 tools/fix_eu_bctr.py --apply generated_eu    # SIEMPRE: si no, crash al entrar al combate
 
 # 3) Compilación Android (arm64-v8a)
 cmake -G Ninja -S android -B build-android \
