@@ -39,6 +39,17 @@ artifacts/
 # Generated code is derived from the copyrighted .xex. Regenerate locally.
 generated/*
 !generated/README.md
+generated_eu/
+generated_*/
+
+# Android build outputs (APKs embed code derived from the .xex: never commit)
+android/build/
+android/**/build/
+android/.gradle/
+*.apk
+*.aab
+*.keystore
+android/local.properties
 
 # ReXGlue SDK (third-party, provided separately by rexglue/rexglue-sdk)
 rexglue/
