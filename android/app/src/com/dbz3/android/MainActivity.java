@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(18, 18, 22));
 
         TextView title = new TextView(this);
-        title.setText("DBZ Budokai 3 · Android  v0.2.1");
+        title.setText("DBZ Budokai 3 · Android  v0.3");
         title.setTextSize(22);
         title.setTextColor(Color.rgb(255, 140, 26));
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -126,10 +126,24 @@ public class MainActivity extends Activity {
             return;
         }
         new File(base, "logs").mkdirs();
+        installAsset("gamecontrollerdb.txt", new File(base, "gamecontrollerdb.txt"));
         log("Arrancando el juego… Si se cierra, vuelve aquí y pulsa 'Compartir último log del juego'.");
         Intent i = new Intent(this, GameActivity.class);
         i.putExtra(GameActivity.EXTRA_ROOT, base);
         startActivity(i);
+    }
+
+    /** Copies a file shipped in the APK assets next to the game data (only if missing). */
+    void installAsset(String name, File dst) {
+        if (dst.isFile()) return;
+        try (InputStream in = getAssets().open(name); FileOutputStream out = new FileOutputStream(dst)) {
+            byte[] buf = new byte[65536];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            log("Instalado " + dst.getName());
+        } catch (Exception e) {
+            log("No se pudo instalar " + name + ": " + e.getMessage());
+        }
     }
 
     File lastLog() {

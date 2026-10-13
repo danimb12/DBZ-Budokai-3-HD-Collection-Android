@@ -51,7 +51,9 @@ ls -la $W/lib/arm64-v8a
 
 # 2) resources + manifest
 $BT/aapt2 compile --dir "$HERE/app/res" -o $W/res.zip
-$BT/aapt2 link -o $W/base.apk -I $JAR --manifest "$HERE/app/AndroidManifest.xml" \
+mkdir -p $W/assets
+cp "$HERE/../gamecontrollerdb.txt" $W/assets/   # SDL pad mappings (zlib), installed into DBZ3/
+$BT/aapt2 link -o $W/base.apk -I $JAR --manifest "$HERE/app/AndroidManifest.xml" -A $W/assets \
   --java $W/gen $W/res.zip --min-sdk-version 29 --target-sdk-version 35
 
 # 3) Java: app + SDL3's own Java glue (zlib licence, taken from the SDK checkout)

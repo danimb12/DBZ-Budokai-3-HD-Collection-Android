@@ -85,6 +85,10 @@ void LoadFonts(ImFontAtlas* atlas) {
       "/usr/share/fonts/TTF/DejaVuSans.ttf",
       "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
       "Z:\\usr\\share\\fonts\\truetype\\dejavu\\DejaVuSans.ttf",
+      // Android
+      "/system/fonts/RobotoStatic-Regular.ttf",
+      "/system/fonts/Roboto-Regular.ttf",
+      "/system/fonts/NotoSans-Regular.ttf",
   });
   if (regular.empty()) {
     REXLOG_WARN("dbz3 launcher: no system UI font found; using the default font");
@@ -97,6 +101,10 @@ void LoadFonts(ImFontAtlas* atlas) {
       "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
       "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
       "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+      // Android
+      "/system/fonts/RobotoStatic-Medium.ttf",
+      "/system/fonts/Roboto-Medium.ttf",
+      "/system/fonts/Roboto-Bold.ttf",
   });
   const std::string black = FirstExisting({
       "C:\\Windows\\Fonts\\seguibl.ttf",

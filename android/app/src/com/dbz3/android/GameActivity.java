@@ -22,6 +22,12 @@ public class GameActivity extends SDLActivity {
             Log.e("DBZ3", "setenv failed", e);
         }
         super.onCreate(b);
+        // On-screen gamepad over the SDL surface (toggle with the ◐ button).
+        if (mLayout != null) {
+            mLayout.addView(new TouchControls(this), new android.view.ViewGroup.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        }
     }
 
     @Override protected String[] getLibraries() {
@@ -37,6 +43,14 @@ public class GameActivity extends SDLActivity {
             "--dbz3_region=eu",
             "--log_level=info",
             "--log_flush_interval=1",
+            // No FidelityFX on Android: plain bilinear output, manual preset.
+            "--dbz3_present_effect=bilinear",
+            "--dbz3_quality_preset=manual",
+            // Touches must not turn into mouse-look.
+            "--dbz3_mnk_mouse=false",
+            "--dbz3_mnk_mode=true",
+            "--dbz3_input_backend=sdl",
+            "--dbz3_input_glyphs=playstation",
         };
     }
 }
