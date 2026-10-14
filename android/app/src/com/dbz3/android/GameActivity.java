@@ -17,6 +17,8 @@ public class GameActivity extends SDLActivity {
     public static final String OPT_OCCLUSION = "opt_occlusion";
     public static final String OPT_ASYNC = "opt_async";
     public static final String OPT_MSAA = "opt_msaa";
+    public static final String OPT_SPARSE = "opt_sparse";
+    public static final String OPT_DYNREND = "opt_dynrend";
 
     boolean opt(String key, boolean def) { return getIntent().getBooleanExtra(key, def); }
 
@@ -48,6 +50,10 @@ public class GameActivity extends SDLActivity {
         a.add("--dbz3_occlusion_queries=" + opt(OPT_OCCLUSION, false));
         a.add("--dbz3_async_shaders=" + opt(OPT_ASYNC, true));
         a.add("--dbz3_native_2x_msaa=" + opt(OPT_MSAA, false));
+        // Sparse binding of the 512 MB guest-memory buffer: cheap on desktop GPUs,
+        // often slow on Adreno drivers. Off = one plain allocation.
+        a.add("--vulkan_sparse_shared_memory=" + opt(OPT_SPARSE, false));
+        a.add("--vulkan_dynamic_rendering=" + opt(OPT_DYNREND, true));
         return a.toArray(new String[0]);
     }
 

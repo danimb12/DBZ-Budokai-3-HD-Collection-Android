@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(18, 18, 22));
 
         TextView title = new TextView(this);
-        title.setText("DBZ Budokai 3 · Android  v0.4.1");
+        title.setText("DBZ Budokai 3 · Android  v0.4.2");
         title.setTextSize(22);
         title.setTextColor(Color.rgb(255, 140, 26));
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -108,6 +108,10 @@ public class MainActivity extends Activity {
         o2.addView(option(GameActivity.OPT_OCCLUSION, "Occlusion queries", false), weight());
         o2.addView(option(GameActivity.OPT_ASYNC, "Shaders asíncronos", true), weight());
         o3.addView(option(GameActivity.OPT_MSAA, "MSAA 2x", false), weight());
+        o3.addView(option(GameActivity.OPT_SPARSE, "Memoria GPU sparse", false), weight());
+        LinearLayout o4 = new LinearLayout(this);
+        root.addView(o4);
+        o4.addView(option(GameActivity.OPT_DYNREND, "Dynamic rendering", true), weight());
         row1.addView(button("1. Analizar móvil", v -> probe()), weight());
         row1.addView(button("2. Permiso archivos", v -> askFiles()), weight());
         row2.addView(button("3. Verificar juego", v -> verify()), weight());
@@ -155,6 +159,8 @@ public class MainActivity extends Activity {
         i.putExtra(GameActivity.OPT_OCCLUSION, p.getBoolean(GameActivity.OPT_OCCLUSION, false));
         i.putExtra(GameActivity.OPT_ASYNC, p.getBoolean(GameActivity.OPT_ASYNC, true));
         i.putExtra(GameActivity.OPT_MSAA, p.getBoolean(GameActivity.OPT_MSAA, false));
+        i.putExtra(GameActivity.OPT_SPARSE, p.getBoolean(GameActivity.OPT_SPARSE, false));
+        i.putExtra(GameActivity.OPT_DYNREND, p.getBoolean(GameActivity.OPT_DYNREND, true));
         startActivity(i);
     }
 
