@@ -2326,6 +2326,20 @@ static std::string Dbz3ThreadLoadSummary(double window_s) {
 }
 #endif
 
+// DBZ3 Android: GPU timing. Every submission gets a pair of timestamps (start /
+// end of its command buffer); when its fence completes the GPU execution time is
+// added to g_dbz3_gpu_busy_ns. g_dbz3_fence_wait_ns is the time the command
+// processor spent blocked waiting for the GPU. Both reported per frame in the
+// `perf` line: busy ~ 16.7 ms/frame => GPU-bound; low => CPU/translation-bound.
+static std::atomic<uint64_t> g_dbz3_gpu_busy_ns{0};
+static std::atomic<uint64_t> g_dbz3_fence_wait_ns{0};
+static std::atomic<uint64_t> g_dbz3_submissions{0};
+static std::atomic<uint64_t> g_dbz3_draws{0};
+static VkQueryPool g_dbz3_ts_pool = VK_NULL_HANDLE;
+static double g_dbz3_ts_period_ns = 1.0;
+static uint64_t g_dbz3_ts_mask = ~uint64_t(0);
+static constexpr uint32_t kDbz3TsRing = 256;
+
 // DBZ3 (v1.4.1): la misma telemetria que en D3D12 para Vulkan (y por tanto Linux): fps
 // del guest cada 5 s con `dbz3_perf_logging`, y lineas `tiron` (frames de mas de 50 ms,
 // siempre, maximo 30 por sesion) con la espera del command processor al guest.
@@ -2358,6 +2372,19 @@ static void Dbz3LogGuestPerformanceVulkan() {
   const double elapsed_s = std::chrono::duration<double>(now - window_start).count();
   if (elapsed_s < 5.0) return;
   if (rex::cvar::GetFlagByName("dbz3_perf_logging") == "true") {
+    {
+      static uint64_t last_busy = 0, last_wait = 0, last_subs = 0, last_draws = 0;
+      const uint64_t busy = g_dbz3_gpu_busy_ns.load(), wait = g_dbz3_fence_wait_ns.load();
+      const uint64_t subs = g_dbz3_submissions.load(), draws = g_dbz3_draws.load();
+      const double f = double(frames_in_window ? frames_in_window : 1);
+      REXGPU_INFO("dbz3: perf gpu busy={:.1f}ms/f fence_wait={:.1f}ms/f submits={:.1f}/f draws={:.0f}/f",
+                  double(busy - last_busy) / 1e6 / f, double(wait - last_wait) / 1e6 / f,
+                  double(subs - last_subs) / f, double(draws - last_draws) / f);
+      last_busy = busy;
+      last_wait = wait;
+      last_subs = subs;
+      last_draws = draws;
+    }
     REXGPU_INFO(
         "dbz3: perf fps={:.1f} frames={} window={:.2f}s max_frame_ms={:.1f} backend=vulkan "
         "cfg=scale:{}x{} msaa:{} cp_wait={:.1f}ms/f",
@@ -3698,6 +3725,7 @@ Shader* VulkanCommandProcessor::LoadShader(xenos::ShaderType shader_type, uint32
 bool VulkanCommandProcessor::IssueDraw(xenos::PrimitiveType prim_type, uint32_t index_count,
                                        IndexBufferInfo* index_buffer_info,
                                        bool major_mode_explicit) {
+  g_dbz3_draws.fetch_add(1, std::memory_order_relaxed);
 #if XE_GPU_FINE_GRAINED_DRAW_SCOPES
   SCOPE_profile_cpu_f("gpu");
 #endif  // XE_GPU_FINE_GRAINED_DRAW_SCOPES
@@ -5078,9 +5106,13 @@ void VulkanCommandProcessor::CheckSubmissionFenceAndDeviceLoss(uint64_t await_su
     // defined by vkQueueSubmit additionally include in the first
     // synchronization scope all commands that occur earlier in submission
     // order."
+    const auto dbz3_wait_start = std::chrono::steady_clock::now();
     VkResult wait_result =
         dfn.vkWaitForFences(device, uint32_t(await_submission - submission_completed_),
                             submissions_in_flight_fences_.data(), VK_TRUE, UINT64_MAX);
+    g_dbz3_fence_wait_ns.fetch_add(uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                                std::chrono::steady_clock::now() - dbz3_wait_start)
+                                                .count()));
     if (wait_result == VK_SUCCESS) {
       fences_awaited += await_submission - submission_completed_;
     } else {
@@ -5122,6 +5154,20 @@ void VulkanCommandProcessor::CheckSubmissionFenceAndDeviceLoss(uint64_t await_su
                       submissions_in_flight_fences_awaited_end);
   submissions_in_flight_fences_.erase(submissions_in_flight_fences_.cbegin(),
                                       submissions_in_flight_fences_awaited_end);
+  if (g_dbz3_ts_pool != VK_NULL_HANDLE) {
+    for (uint64_t sub = submission_completed_ + 1; sub <= submission_completed_ + fences_awaited;
+         ++sub) {
+      uint64_t ts[2] = {};
+      if (dfn.vkGetQueryPoolResults(device, g_dbz3_ts_pool, uint32_t(sub % kDbz3TsRing) * 2, 2,
+                                    sizeof(ts), ts, sizeof(uint64_t),
+                                    VK_QUERY_RESULT_64_BIT) == VK_SUCCESS) {
+        const uint64_t t0 = ts[0] & g_dbz3_ts_mask, t1 = ts[1] & g_dbz3_ts_mask;
+        if (t1 > t0) {
+          g_dbz3_gpu_busy_ns.fetch_add(uint64_t(double(t1 - t0) * g_dbz3_ts_period_ns));
+        }
+      }
+    }
+  }
   submission_completed_ += fences_awaited;
 
   // Reclaim semaphores.
@@ -5493,7 +5539,36 @@ bool VulkanCommandProcessor::EndSubmission(bool is_swap) {
       REXGPU_ERROR("Failed to begin a Vulkan command buffer");
       return false;
     }
+    // DBZ3 Android: GPU timestamps around this submission (see g_dbz3_gpu_busy_ns).
+    if (g_dbz3_ts_pool == VK_NULL_HANDLE) {
+      VkPhysicalDeviceProperties pdp = {};
+      vulkan_device->vulkan_instance()->functions().vkGetPhysicalDeviceProperties(
+          vulkan_device->physical_device(), &pdp);
+      if (pdp.limits.timestampComputeAndGraphics) {
+        VkQueryPoolCreateInfo qp = {};
+        qp.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+        qp.queryType = VK_QUERY_TYPE_TIMESTAMP;
+        qp.queryCount = kDbz3TsRing * 2;
+        if (dfn.vkCreateQueryPool(device, &qp, nullptr, &g_dbz3_ts_pool) == VK_SUCCESS) {
+          g_dbz3_ts_period_ns = double(pdp.limits.timestampPeriod);
+          REXGPU_INFO("dbz3: GPU timestamps enabled (period {} ns)", g_dbz3_ts_period_ns);
+        } else {
+          g_dbz3_ts_pool = VK_NULL_HANDLE;
+        }
+      }
+    }
+    const uint32_t dbz3_ts_slot = uint32_t(GetCurrentSubmission() % kDbz3TsRing) * 2;
+    if (g_dbz3_ts_pool != VK_NULL_HANDLE) {
+      dfn.vkCmdResetQueryPool(command_buffer.buffer, g_dbz3_ts_pool, dbz3_ts_slot, 2);
+      dfn.vkCmdWriteTimestamp(command_buffer.buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                              g_dbz3_ts_pool, dbz3_ts_slot);
+    }
     deferred_command_buffer_.Execute(command_buffer.buffer);
+    if (g_dbz3_ts_pool != VK_NULL_HANDLE) {
+      dfn.vkCmdWriteTimestamp(command_buffer.buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                              g_dbz3_ts_pool, dbz3_ts_slot + 1);
+    }
+    g_dbz3_submissions.fetch_add(1);
     if (dfn.vkEndCommandBuffer(command_buffer.buffer) != VK_SUCCESS) {
       REXGPU_ERROR("Failed to end a Vulkan command buffer");
       return false;

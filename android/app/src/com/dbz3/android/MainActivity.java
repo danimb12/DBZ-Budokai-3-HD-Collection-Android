@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(18, 18, 22));
 
         TextView title = new TextView(this);
-        title.setText("DBZ Budokai 3 · Android  v0.4.2");
+        title.setText("DBZ Budokai 3 · Android  v0.4.3");
         title.setTextSize(22);
         title.setTextColor(Color.rgb(255, 140, 26));
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -108,10 +108,11 @@ public class MainActivity extends Activity {
         o2.addView(option(GameActivity.OPT_OCCLUSION, "Occlusion queries", false), weight());
         o2.addView(option(GameActivity.OPT_ASYNC, "Shaders asíncronos", true), weight());
         o3.addView(option(GameActivity.OPT_MSAA, "MSAA 2x", false), weight());
-        o3.addView(option(GameActivity.OPT_SPARSE, "Memoria GPU sparse", false), weight());
+        o3.addView(option(GameActivity.OPT_SPARSE, "Memoria GPU sparse", true), weight());
         LinearLayout o4 = new LinearLayout(this);
         root.addView(o4);
         o4.addView(option(GameActivity.OPT_DYNREND, "Dynamic rendering", true), weight());
+        o4.addView(option(GameActivity.OPT_PROFILE, "Perfil CPU (diagnóstico)", true), weight());
         row1.addView(button("1. Analizar móvil", v -> probe()), weight());
         row1.addView(button("2. Permiso archivos", v -> askFiles()), weight());
         row2.addView(button("3. Verificar juego", v -> verify()), weight());
@@ -148,6 +149,17 @@ public class MainActivity extends Activity {
             log("No encuentro " + base + "/eu/data_cmn.afs. Revisa la carpeta (botón 3).");
             return;
         }
+        // Options only apply to a fresh game process: end any game still running.
+        ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        if (am.getRunningAppProcesses() != null) {
+            for (ActivityManager.RunningAppProcessInfo pi : am.getRunningAppProcesses()) {
+                if (pi.processName != null && pi.processName.endsWith(":game")) {
+                    android.os.Process.killProcess(pi.pid);
+                    log("Partida anterior cerrada para aplicar las opciones.");
+                    try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+                }
+            }
+        }
         new File(base, "logs").mkdirs();
         installAsset("gamecontrollerdb.txt", new File(base, "gamecontrollerdb.txt"));
         log("Arrancando el juego… Si se cierra, vuelve aquí y pulsa 'Compartir último log del juego'.");
@@ -159,8 +171,9 @@ public class MainActivity extends Activity {
         i.putExtra(GameActivity.OPT_OCCLUSION, p.getBoolean(GameActivity.OPT_OCCLUSION, false));
         i.putExtra(GameActivity.OPT_ASYNC, p.getBoolean(GameActivity.OPT_ASYNC, true));
         i.putExtra(GameActivity.OPT_MSAA, p.getBoolean(GameActivity.OPT_MSAA, false));
-        i.putExtra(GameActivity.OPT_SPARSE, p.getBoolean(GameActivity.OPT_SPARSE, false));
+        i.putExtra(GameActivity.OPT_SPARSE, p.getBoolean(GameActivity.OPT_SPARSE, true));
         i.putExtra(GameActivity.OPT_DYNREND, p.getBoolean(GameActivity.OPT_DYNREND, true));
+        i.putExtra(GameActivity.OPT_PROFILE, p.getBoolean(GameActivity.OPT_PROFILE, true));
         startActivity(i);
     }
 

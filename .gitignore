@@ -68,6 +68,7 @@ patches/*
 !patches/rexglue-sdk-android/**/*.h
 !patches/rexglue-sdk-android/**/*.cpp
 !patches/rexglue-sdk-android/**/CMakeLists.txt
+!patches/rexglue-sdk-android/**/*.inc
 !patches/rexglue-sdk-android/README.md
 
 # Extracted/analysis outputs.

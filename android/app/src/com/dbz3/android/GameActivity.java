@@ -19,6 +19,7 @@ public class GameActivity extends SDLActivity {
     public static final String OPT_MSAA = "opt_msaa";
     public static final String OPT_SPARSE = "opt_sparse";
     public static final String OPT_DYNREND = "opt_dynrend";
+    public static final String OPT_PROFILE = "opt_profile";
 
     boolean opt(String key, boolean def) { return getIntent().getBooleanExtra(key, def); }
 
@@ -27,6 +28,7 @@ public class GameActivity extends SDLActivity {
         if (root == null) root = MainActivity.defaultRoot();
         try {
             Os.setenv("REX_ANDROID_ROOT", root, true);
+            Os.setenv("REX_PROFILE", getIntent().getBooleanExtra(OPT_PROFILE, false) ? "1" : "0", true);
         } catch (Exception e) {
             Log.e("DBZ3", "setenv failed", e);
         }
@@ -52,7 +54,7 @@ public class GameActivity extends SDLActivity {
         a.add("--dbz3_native_2x_msaa=" + opt(OPT_MSAA, false));
         // Sparse binding of the 512 MB guest-memory buffer: cheap on desktop GPUs,
         // often slow on Adreno drivers. Off = one plain allocation.
-        a.add("--vulkan_sparse_shared_memory=" + opt(OPT_SPARSE, false));
+        a.add("--vulkan_sparse_shared_memory=" + opt(OPT_SPARSE, true));
         a.add("--vulkan_dynamic_rendering=" + opt(OPT_DYNREND, true));
         return a.toArray(new String[0]);
     }

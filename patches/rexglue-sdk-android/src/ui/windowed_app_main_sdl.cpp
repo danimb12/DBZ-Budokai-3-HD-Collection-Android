@@ -21,6 +21,9 @@
 #include <rex/platform.h>
 #include <rex/ui/windowed_app.h>
 #include <rex/ui/windowed_app_context_sdl.h>
+#if REX_PLATFORM_ANDROID
+#include <rex/main_android.h>
+#endif
 
 #if REX_PLATFORM_WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -40,6 +43,9 @@ int RunWindowedApp(int argc, char** argv) {
   auto remaining = rex::cvar::Init(argc, argv);
   rex::cvar::ApplyEnvironment();
   rex::InitLoggingEarly();
+#if REX_PLATFORM_ANDROID
+  rex::profiler::StartIfRequested();
+#endif
 
   int result;
   {

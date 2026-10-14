@@ -17,4 +17,8 @@ namespace rex::thread {
 void AndroidInitialize();
 void AndroidShutdown();
 }  // namespace rex::thread
+namespace rex::profiler {
+// Sampling CPU profiler (src/core/android_profiler.cpp), on when REX_PROFILE=1.
+void StartIfRequested();
+}  // namespace rex::profiler
 #endif

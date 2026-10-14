@@ -66,6 +66,7 @@ elseif(UNIX)
         filesystem_posix.cpp
         fiber_posix.cpp
         fiber_android.cpp
+        android_profiler.cpp
         mapped_memory_posix.cpp
         math_gcc.cpp
         memory_posix.cpp

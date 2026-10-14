@@ -20,3 +20,5 @@ sobre un checkout limpio del tag `v0.10.0`. Son copias completas de archivo
 | `src/ui/presenter.cpp`, `src/graphics/vulkan/command_processor.cpp` | `dbz3_perf_logging` fuera de Windows + carga de CPU por hilo en Android (`perf cpu`) |
 | `src/audio/sdl/sdl_audio_driver.cpp` | Android: salida estéreo con el downmix del runtime (AAudio perdía los canales surround/LFE: sin SFX de golpes) |
 | `src/graphics/graphics_system.cpp` | Sin vblanks mientras la app está en segundo plano (`dbz3_host_in_background`): pausa efectiva |
+| `src/core/android_profiler.cpp`, `include/rex/main_android.h` | Perfilador por muestreo (SIGPROF) activable con `REX_PROFILE=1`: funciones más calientes por hilo en el log (`prof:`) |
+| `src/graphics/vulkan/command_processor.cpp`, `include/rex/ui/vulkan/functions/device_1_0.inc` | Timestamps de GPU por submission: `perf gpu busy=…ms/f fence_wait=… submits=… draws=…` |
